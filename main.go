@@ -16,11 +16,12 @@ func main() {
 	extractNGramsFlag := flag.Bool("ngrams", false, "Запустить только извлечение n-грамм")
 	n := flag.Int("n", 2, "Размер n-грамм (2 для биграмм, 3 для триграмм и т.д.)")
 	topN := flag.Int("top", 10, "Количество топ-N n-грамм для вывода в консоль")
+	useStopwords := flag.Bool("stopwords", false, "Учитывать стоп-слова при формировании n-грамм")
 	flag.Parse()
 
 	// Если флаги не указаны, запустить полный pipeline
 	if !*cleanTextFlag && !*runGloveFlag && !*extractNGramsFlag {
-		fullPipeline(*n, *topN)
+		fullPipeline(*n, *topN, *useStopwords)
 		return
 	}
 
@@ -32,16 +33,16 @@ func main() {
 		runGlove()
 	}
 	if *extractNGramsFlag {
-		extractNGrams(*n, *topN)
+		extractNGrams(*n, *topN, *useStopwords)
 	}
 }
 
 // fullPipeline запускает полный pipeline
-func fullPipeline(n int, topN int) {
+func fullPipeline(n int, topN int, useStopwords bool) {
 	fmt.Println("Запуск полного pipeline...")
 	cleanText()
 	runGlove()
-	extractNGrams(n, topN)
+	extractNGrams(n, topN, useStopwords)
 }
 
 // cleanText выполняет очистку текста
@@ -66,11 +67,12 @@ func runGlove() {
 }
 
 // extractNGrams извлекает n-граммы
-func extractNGrams(n int, topN int) {
+func extractNGrams(n int, topN int, useStopwords bool) {
 	fmt.Printf("Шаг 3: Извлечение %d-грамм...\n", n)
 	cooccurrenceFile := "data/cooccurrence.bin"
 	vocabFile := "data/vocab.txt"
-	topNGrams, allNGrams, err := ngrams.ExtractNGrams(cooccurrenceFile, vocabFile, n, topN)
+	stopwordsFile := "data/stopwords.txt"
+	topNGrams, allNGrams, err := ngrams.ExtractNGrams(cooccurrenceFile, vocabFile, stopwordsFile, n, topN, useStopwords)
 	if err != nil {
 		log.Fatalf("Ошибка при извлечении n-грамм: %v", err)
 	}

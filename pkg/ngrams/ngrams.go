@@ -25,7 +25,7 @@ func (a ByFrequency) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByFrequency) Less(i, j int) bool { return a[i].Frequency > a[j].Frequency } // Сортировка по убыванию
 
 // ExtractNGrams извлекает топ-N n-грамм из бинарного файла совместной встречаемости
-func ExtractNGrams(cooccurrenceFile string, vocabFile string, n int, topN int) ([]Pair, []Pair, error) {
+func ExtractNGrams(cooccurrenceFile string, vocabFile string, stopwordsFile string, n int, topN int, useStopwords bool) ([]Pair, []Pair, error) {
 	// Открытие файла совместной встречаемости
 	cooccurFile, err := os.Open(cooccurrenceFile)
 	if err != nil {
@@ -37,6 +37,15 @@ func ExtractNGrams(cooccurrenceFile string, vocabFile string, n int, topN int) (
 	vocab, err := loadVocab(vocabFile)
 	if err != nil {
 		return nil, nil, fmt.Errorf("ошибка при загрузке словаря: %v", err)
+	}
+
+	// Загрузка стоп-слов (если нужно)
+	var stopwords map[string]struct{}
+	if useStopwords {
+		stopwords, err = loadStopwords(stopwordsFile)
+		if err != nil {
+			return nil, nil, fmt.Errorf("ошибка при загрузке стоп-слов: %v", err)
+		}
 	}
 
 	// Логирование начала обработки
@@ -88,6 +97,16 @@ func ExtractNGrams(cooccurrenceFile string, vocabFile string, n int, topN int) (
 					break
 				}
 				ngramStr[i] = wordStr
+			}
+
+			// Фильтрация стоп-слов (если нужно)
+			if valid && useStopwords {
+				for _, word := range ngramStr {
+					if _, isStopword := stopwords[word]; isStopword {
+						valid = false
+						break
+					}
+				}
 			}
 
 			if valid {
@@ -152,6 +171,30 @@ func loadVocab(vocabFile string) (map[int32]string, error) {
 	}
 
 	return vocab, nil
+}
+
+// loadStopwords загружает стоп-слова из файла
+func loadStopwords(stopwordsFile string) (map[string]struct{}, error) {
+	file, err := os.Open(stopwordsFile)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка при открытии файла стоп-слов: %v", err)
+	}
+	defer file.Close()
+
+	stopwords := make(map[string]struct{})
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		word := strings.TrimSpace(scanner.Text())
+		if word != "" {
+			stopwords[word] = struct{}{}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка при чтении файла стоп-слов: %v", err)
+	}
+
+	return stopwords, nil
 }
 
 // SaveNGrams сохраняет n-граммы в файл
