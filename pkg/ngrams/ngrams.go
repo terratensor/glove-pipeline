@@ -135,7 +135,7 @@ func loadVocab(vocabFile string) (map[int32]string, error) {
 
 	vocab := make(map[int32]string)
 	scanner := bufio.NewScanner(file)
-	var index int32 = 0
+	var index int32 = 1
 	for scanner.Scan() {
 		line := scanner.Text()
 		parts := strings.Fields(line)
