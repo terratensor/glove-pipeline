@@ -120,8 +120,8 @@ func main() {
 	}
 
 	// Поиск синонимов для заданного слова
-	word := "калоед"
-	topN := 10
+	word := "полная"
+	topN := 20
 	synonyms, err := FindSynonyms(word, vectors, topN)
 	if err != nil {
 		fmt.Println("Ошибка поиска синонимов:", err)

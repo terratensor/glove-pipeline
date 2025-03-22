@@ -187,7 +187,7 @@ func FindSynonyms(targetVector []float64, vectors map[string][]float64, topN int
 
 func main() {
 	// Загрузка векторов
-	vectors, err := LoadVectors("../../data/fct/vectors.txt.txt")
+	vectors, err := LoadVectors("../../data/vectors.txt.txt")
 	if err != nil {
 		fmt.Println("Ошибка загрузки векторов:", err)
 		return
@@ -199,7 +199,7 @@ func main() {
 	}
 
 	// Загрузка стоп-слов
-	stopWords, err := LoadStopWords("../../data/fct/stopwords.txt")
+	stopWords, err := LoadStopWords("../../data/stopwords.txt")
 	if err != nil {
 		fmt.Println("Ошибка загрузки стоп-слов:", err)
 		return
