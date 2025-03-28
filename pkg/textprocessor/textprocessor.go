@@ -8,32 +8,43 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 // CleanText очищает текст от HTML-тегов, ссылок и лишних символов
 func CleanText(text string) string {
+	// Удаление HTML-сущностей (включая &quot;, &#34; и другие)
+	re := regexp.MustCompile(`&[a-z]+;|&#\d+;`)
+	text = re.ReplaceAllString(text, " ")
+
 	// Удаление ссылок, обрамленных тегами <span class="link">...</span>
-	re := regexp.MustCompile(`<span class="link">.*?</span>`)
-	text = re.ReplaceAllString(text, "")
+	re = regexp.MustCompile(`<span class="link">.*?</span>`)
+	text = re.ReplaceAllString(text, " ")
 
 	// Удаление цитирования (всё, что внутри <blockquote>...</blockquote>)
 	re = regexp.MustCompile(`<blockquote[^>]*>.*?</blockquote>`)
-	text = re.ReplaceAllString(text, "")
+	text = re.ReplaceAllString(text, " ")
 
 	// Удаление оставшихся HTML-тегов
 	re = regexp.MustCompile(`<[^>]+>`)
-	text = re.ReplaceAllString(text, "")
+	text = re.ReplaceAllString(text, " ")
 
 	// Удаление обычных ссылок (начинающихся с http или www)
 	re = regexp.MustCompile(`https?://\S+|www\.\S+`)
-	text = re.ReplaceAllString(text, "")
+	text = re.ReplaceAllString(text, " ")
 
-	// Удаление пунктуации и специальных символов (оставляем только буквы и пробелы)
-	re = regexp.MustCompile(`[^a-zA-Zа-яА-Я\s]`)
-	text = re.ReplaceAllString(text, "")
+	// Удаление пунктуации и специальных символов (оставляем только буквы, цифры и пробелы)
+	// Сохраняем букву ё (Ё) явно в регулярном выражении
+	re = regexp.MustCompile(`[^a-zA-Zа-яА-ЯёЁ0-9\s]`)
+	text = re.ReplaceAllString(text, " ")
 
-	// Приведение текста к нижнему регистру
-	text = strings.ToLower(text)
+	// Приведение текста к нижнему регистру с сохранением буквы ё
+	text = strings.Map(func(r rune) rune {
+		if r == 'Ё' {
+			return 'ё'
+		}
+		return unicode.ToLower(r)
+	}, text)
 
 	return text
 }
